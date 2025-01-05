@@ -1,2 +1,2 @@
-pi_1,pi_0,t_1,t_0,dis_eff,q_1,q_0,S_1,S_0,risk_aversion
-0.8,0.3,100,10,2,100,10,1000,800,0.5
+﻿N_strip;Land_spred_ha;Land_cost;p_fine;Land_cost_0;Fine;risk_aversion
+0;0;0;0;0;0;5
