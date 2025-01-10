@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd 
 import csv
 import gamspy as gp
-
+import matplotlib.colors as colors
 #%% Parameters initialization
 N_limit = 170 # kg N/ha, direttiva nitrati
 N_buffalo = 83 # kg N/ha, Determinazione del carico di azoto secondo il DM 7/4/06
@@ -14,7 +14,8 @@ Land_spred_ha = 1
 Land_cost = 589 # Euro/ha, Dati RICA, (Affitti passivi / sau in affitto)
 Land_cost_to_right = 0.7 # fraction of the land cost to be paid in case of land rights
 Land_rights = Land_cost * Land_cost_to_right
-p_sanction = 0.3 # Probabilità di sanzione, 
+p_sanction = 0.3 # Probabilità di sanzione
+p_sanction_val = np.arange(0.1,1,0.1)
 Land_cost_to_rights_val = np.arange(0.1,1,0.1) #
 Land_cost_0	= 0
 Sanction = 2582.28  # 516.46 ad euro 5164.57 , Disciplina tecnica per la utilizzazione dei liquami zootecnici - Le sanzioni amministrative sono così graduate: a) in sede di prima violazione, la sanzione da applicare è pari alla sanzione minima prevista;b) in sede di seconda violazione, la sanzione da applicare è pari al 50% della sanzione massima prevista;c) in sede di terza violazione, la sanzione da applicare è pari al 75% della sanzione massima prevista;d) in sede di quarta e successiva violazione, la sanzione da applicare è pari alla sanzione massima prevista
@@ -55,6 +56,17 @@ print (u_non_compliance(p_sanction,Land_cost_0, Risk_aversion, Sanction))
 print(u_compliance_biogas(Land_rights, Risk_aversion, N_strip_eff))
 print(delta_compliance(Land_rights, Risk_aversion, p_sanction, Land_cost_0, Sanction))
 print(delta_compliance_b(Land_rights, Risk_aversion, p_sanction, Land_cost_0, Sanction, N_strip_eff))
+# %% plot
+def plot_results(results, par1 , par2):
+    norm = colors.TwoSlopeNorm(vmin= results[:,2].min(), vcenter=0 , vmax=3)
+    results = np.array(results)
+    plt.figure()
+    plt.scatter(results[:,0],results[:,1],c=results[:,2],cmap='RdYlGn', norm=norm, s=150)
+    plt.colorbar()
+    plt.xlabel(par1)
+    plt.ylabel(par2)
+    plt.savefig((par1+'_'+par2+'.png'))
+    plt.show()
 
 # %% Land rights and risk aversion
 # Sensitivity analysis
@@ -63,15 +75,14 @@ for l in Land_cost_to_rights_val:
     l_ = l*Land_cost
     for r in Risk_aversion_val:
         results.append([l_,r,u_compliance(l_,r),u_non_compliance(p_sanction,Land_cost_0, r, Sanction),delta_compliance(l_,r,p_sanction,Land_cost_0, Sanction), u_compliance_biogas(l_,r,N_strip_eff),delta_compliance_b(l_,r,p_sanction,Land_cost_0, Sanction, N_strip_eff)])
-
-
-
-# %% plot
 results = np.array(results)
-plt.figure()
-plt.scatter(results[:,0],results[:,1],c=results[:,2],cmap='coolwarm')
-plt.colorbar()
-
-
+plot_results(results, 'Land rights', 'Risk aversion')
+# %%
+results = []
+for i in Sanction_val:
+    for j in p_sanction_val:
+        results.append([i,j,u_compliance(Land_rights, Risk_aversion),u_non_compliance(j,Land_cost_0, Risk_aversion, i),delta_compliance(Land_rights, Risk_aversion, j, Land_cost_0, i), u_compliance_biogas(Land_rights, Risk_aversion, N_strip_eff),delta_compliance_b(Land_rights, Risk_aversion, j, Land_cost_0, i, N_strip_eff)])
+results = np.array(results)
+plot_results(results, 'Sanction', 'Probability of sanction')
 
 # %%
