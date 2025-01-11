@@ -57,15 +57,34 @@ print(u_compliance_biogas(Land_rights, Risk_aversion, N_strip_eff))
 print(delta_compliance(Land_rights, Risk_aversion, p_sanction, Land_cost_0, Sanction))
 print(delta_compliance_b(Land_rights, Risk_aversion, p_sanction, Land_cost_0, Sanction, N_strip_eff))
 # %% plot
-def plot_results(results, par1 , par2):
-    norm = colors.TwoSlopeNorm(vmin= results[:,2].min(), vcenter=0 , vmax=3)
+def plot_results(results, par1 , par2, b = False):
+    if b:
+        i = 6
+    else:
+        i = 4
+    if results[:,4].min() >= 0 and results[:,6].max() >= 0:
+        vmin = -0.1
+    else: 
+        vmin = min(results[:,4].min(),results[:,6].min())
+    if results[:,4].max() <= 0 and results[:,6].min() <= 0:
+        vmax = +0.1
+    else:
+        vmax = max(results[:,4].max(),results[:,6].max())
+    norm = colors.TwoSlopeNorm(vmin= vmin, vcenter=0 , vmax=vmax)
     results = np.array(results)
     plt.figure()
-    plt.scatter(results[:,0],results[:,1],c=results[:,2],cmap='RdYlGn', norm=norm, s=150)
+    plt.scatter(results[:,0],results[:,1],c=results[:,i],cmap='RdYlGn', norm=norm, s=150)
     plt.colorbar()
     plt.xlabel(par1)
     plt.ylabel(par2)
-    plt.savefig((par1+'_'+par2+'.png'))
+    if b:
+        plt.title('With Biogas')
+    else:
+        plt.title('Without Biogas')
+    if b:
+        plt.savefig(('./Grafici/'+par1+'_'+par2+'_biogas.png'))
+    else: 
+        plt.savefig(('./Grafici/'+par1+'_'+par2+'.png'))
     plt.show()
 
 # %% Land rights and risk aversion
@@ -77,12 +96,18 @@ for l in Land_cost_to_rights_val:
         results.append([l_,r,u_compliance(l_,r),u_non_compliance(p_sanction,Land_cost_0, r, Sanction),delta_compliance(l_,r,p_sanction,Land_cost_0, Sanction), u_compliance_biogas(l_,r,N_strip_eff),delta_compliance_b(l_,r,p_sanction,Land_cost_0, Sanction, N_strip_eff)])
 results = np.array(results)
 plot_results(results, 'Land rights', 'Risk aversion')
-# %%
+plot_results(results, 'Land rights', 'Risk aversion',1)
+
+# %% Sanction and probability of sanction
 results = []
 for i in Sanction_val:
     for j in p_sanction_val:
         results.append([i,j,u_compliance(Land_rights, Risk_aversion),u_non_compliance(j,Land_cost_0, Risk_aversion, i),delta_compliance(Land_rights, Risk_aversion, j, Land_cost_0, i), u_compliance_biogas(Land_rights, Risk_aversion, N_strip_eff),delta_compliance_b(Land_rights, Risk_aversion, j, Land_cost_0, i, N_strip_eff)])
 results = np.array(results)
 plot_results(results, 'Sanction', 'Probability of sanction')
+plot_results(results, 'Sanction', 'Probability of sanction',1)
+
+# %% 
+plot_results(results, 'Sanction', 'Probability of sanction',1)
 
 # %%
