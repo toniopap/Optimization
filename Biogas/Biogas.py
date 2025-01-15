@@ -6,6 +6,7 @@ import csv
 import gamspy as gp
 import matplotlib.colors as colors
 #%% Parameters initialization
+
 N_limit = 170 # kg N/ha, direttiva nitrati
 N_buffalo = 83 # kg N/ha, Determinazione del carico di azoto secondo il DM 7/4/06
 N_strip_eff = 0.5 # Efficienza di rimozione dell'azoto
@@ -23,6 +24,7 @@ Sanction_val = [516.46, 2582.28, 3873.43 , 5164.57] # min, 50%, 75%, max
 
 Risk_aversion = 0.193 # Italian farmer risk aversion by elicitation using lotteries, source: https://doi.org/10.1002/aepp.13330 , 0.164 , 0.223
 Risk_aversion_val = np.arange(0.164, 0.223, 0.01) # min, max
+
 
 
 #%% The model
@@ -86,6 +88,11 @@ def plot_results(results, par1 , par2, b = False):
     else: 
         plt.savefig(('./Grafici/'+par1+'_'+par2+'.png'))
     plt.show()
+# %%
+def plot_results_heat():
+
+    return
+# %%
 
 # %% Land rights and risk aversion
 # Sensitivity analysis
@@ -107,7 +114,36 @@ results = np.array(results)
 plot_results(results, 'Sanction', 'Probability of sanction')
 plot_results(results, 'Sanction', 'Probability of sanction',1)
 
-# %% 
-plot_results(results, 'Sanction', 'Probability of sanction',1)
+# %%
+results = []
+for i in Sanction_val:
+    for j in p_sanction_val:
+        results.append([i,j,u_compliance(Land_rights, Risk_aversion),u_non_compliance(j,Land_cost_0, Risk_aversion, i),delta_compliance(Land_rights, Risk_aversion, j, Land_cost_0, i), u_compliance_biogas(Land_rights, Risk_aversion, N_strip_eff),delta_compliance_b(Land_rights, Risk_aversion, j, Land_cost_0, i, N_strip_eff)])
+results = np.array(results)
+
+
+    
 
 # %%
+results2 = np.zeros((len(Sanction_val),len(p_sanction_val)))
+for i in range(len(Sanction_val)):
+    for j in range(len(p_sanction_val)):
+        results2[i,j]= delta_compliance(Land_rights, Risk_aversion, p_sanction_val[j], Land_cost_0, Sanction_val[i])
+
+# Create some example data (replace with your data)
+data = results2
+# Plot the heatmap
+def heatmap2d(arr: np.ndarray, xlabel, ylabel, x_param, y_param):
+
+    plt.figure(figsize=(8,6))
+    norm = colors.TwoSlopeNorm(vmin= -3, vcenter=0 , vmax=+5)
+    img = plt.imshow(arr,aspect='auto', origin='lower', 
+                 extent=[x_param[0], x_param[-1], y_param[0], y_param[-1]], 
+                 interpolation='bilinear', cmap='RdYlGn', norm=norm)
+    # Add colorbar
+    plt.colorbar(img, label='Delta utility')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.show()
+    
+heatmap2d(results2, 'Sanction', 'Probability of sanction',Sanction_val,p_sanction_val )
