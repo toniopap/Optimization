@@ -2,8 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd 
-import csv
-import gamspy as gp
 import matplotlib.colors as colors
 #%% Parameters initialization
 
