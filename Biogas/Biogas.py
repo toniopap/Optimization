@@ -145,5 +145,6 @@ def heatmap2d(arr: np.ndarray, xlabel, ylabel, x_param, y_param):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.show()
+    plt.savefig(('./Grafici/'+xlabel+'_'+ylabel+'.png'))
     
 heatmap2d(results2, 'Sanction', 'Probability of sanction',Sanction_val,p_sanction_val )
