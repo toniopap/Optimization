@@ -158,7 +158,7 @@ results = np.zeros((len(Land_cost_to_rights_val),len(Risk_aversion_val)))
 resultsb  = np.zeros((len(Land_cost_to_rights_val),len(Risk_aversion_val)))
 for i in range(len(Land_cost_to_rights_val)):
     for j in range(len(Risk_aversion_val)):
-        L_r = Land_cost * Land_cost_to_rights_val[i]
+        L_r = Land_cost * Land_cost_to_rights_val[i]*0.3
         results[i,j]= delta_compliance(L_r, Risk_aversion_val[j], p_sanction, Land_cost_0, Sanction)
         resultsb[i,j]= delta_compliance_b(L_r, Risk_aversion_val[j], p_sanction, Land_cost_0, Sanction, N_strip_eff)
 # Plot the heatmap
@@ -186,6 +186,7 @@ surface3d_plot(results2, 'Probability of sanction', 'Sanction',Sanction_val,p_sa
 results = np.zeros((len(p_sanction_val),len(Risk_aversion_val)))
 resultsb  = np.zeros((len(p_sanction_val),len(Risk_aversion_val)))
 deltab = np.zeros((len(p_sanction_val),len(Risk_aversion_val)))
+
 for i in range(len(Risk_aversion_val)):
     for j in range(len(p_sanction_val)):
         results[j,i]= delta_compliance(Land_rights, Risk_aversion_val[i], p_sanction_val[j], Land_cost_0, Sanction)
@@ -225,4 +226,16 @@ heatmap2d(results, 'Nitrogen removal efficiency', 'Probability of sanction',p_sa
 heatmap2d(resultsb, 'Nitrogen removal efficiency', 'Probability of sanction',p_sanction_val, N_strip_eff_val,1 )
 deltab_heat(deltab, 'Nitrogen removal efficiency', 'Probability of sanction',p_sanction_val, N_strip_eff_val)
 surface3d_plot(results, 'Nitrogen removal efficiency', 'Probability of sanction',p_sanction_val, N_strip_eff_val)
+# %% Manure disposal cost and Nitrogen removal efficiency
+results = np.zeros((len(Land_cost_to_rights_val),len(N_strip_eff_val)))
+resultsb  = np.zeros((len(Land_cost_to_rights_val),len(N_strip_eff_val)))
+for i in range(len(Land_cost_to_rights_val)):
+    for j in range(len(N_strip_eff_val)):
+        L_r = Land_cost * Land_cost_to_rights_val[i]
+        results[i,j]= delta_compliance(L_r, Risk_aversion, p_sanction, Land_cost_0, Sanction)
+        resultsb[i,j]= delta_compliance_b(L_r, Risk_aversion, p_sanction, Land_cost_0, Sanction, N_strip_eff_val[j])
+# Plot the heatmap
+heatmap2d(results, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val)
+heatmap2d(resultsb, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val,1)
+deltab_heat(resultsb-results, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val)
 # %%
