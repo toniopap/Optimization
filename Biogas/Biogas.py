@@ -22,7 +22,8 @@ Sanction_val = [516.46, 2582.28, 3873.43 , 5164.57] # min, 50%, 75%, max
 
 Risk_aversion = 0.193 # Italian farmer risk aversion by elicitation using lotteries, source: https://doi.org/10.1002/aepp.13330 , 0.164 , 0.223
 Risk_aversion_val = np.arange(0.164, 0.223, 0.01) # min, max
-
+R_europe = 0.214 # Risk aversion for Europe
+R_europe_val = np.arange(0.206, 0.223, 0.01) # min, max
 
 #%% The model
 def u_compliance(l_c, risk): # l_c: land cost, risk: risk aversion
@@ -104,6 +105,26 @@ def heatmap2d(arr: np.ndarray, xlabel, ylabel, x_param, y_param, b = False):
     else:
         plt.savefig(('./Grafici/'+xlabel+'_'+ylabel+'.png'))
     plt.show()
+def heatmap2d2(arr: np.ndarray, xlabel, ylabel, x_param, y_param, b = False):
+
+    plt.figure(figsize=(8,6))
+    norm = colors.TwoSlopeNorm(vmin= -3, vcenter=0 , vmax=+3)
+    img = plt.imshow(arr,aspect='auto', origin='lower', 
+                 extent=[ y_param[0], y_param[-1],x_param[0], x_param[-1]], 
+                  interpolation= 'Bilinear', cmap='RdYlGn')
+    # Add colorbar
+    plt.colorbar(img, label='Delta utility')
+    if b:
+        plt.title('With Biogas')
+    else:
+        plt.title('Without Biogas')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    if b:
+        plt.savefig(('./Grafici/'+xlabel+'_'+ylabel+'_biogas.png'))
+    else:
+        plt.savefig(('./Grafici/'+xlabel+'_'+ylabel+'.png'))
+    plt.show()
 def deltab_heat(arr: np.ndarray, xlabel, ylabel, x_param, y_param):
     plt.figure(figsize=(8,6))
     img = plt.imshow(arr,aspect='auto', origin='lower', 
@@ -116,6 +137,8 @@ def deltab_heat(arr: np.ndarray, xlabel, ylabel, x_param, y_param):
     plt.ylabel(ylabel)
     plt.savefig(('./Grafici/'+xlabel+'_'+ylabel+'_diff.png'))
     plt.show()
+
+
 # %%
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot as plt
@@ -235,7 +258,7 @@ for i in range(len(Land_cost_to_rights_val)):
         results[i,j]= delta_compliance(L_r, Risk_aversion, p_sanction, Land_cost_0, Sanction)
         resultsb[i,j]= delta_compliance_b(L_r, Risk_aversion, p_sanction, Land_cost_0, Sanction, N_strip_eff_val[j])
 # Plot the heatmap
-heatmap2d(results, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val)
-heatmap2d(resultsb, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val,1)
+heatmap2d2(results, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val)
+heatmap2d2(resultsb, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val,1)
 deltab_heat(resultsb-results, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val)
 # %%
