@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd 
 import matplotlib.colors as colors
+from scipy.interpolate import interp1d
 #%% Parameters initialization
 
 N_limit = 170 # kg N/ha, direttiva nitrati
@@ -11,11 +12,11 @@ N_strip_eff = 0.7 # Efficienza di rimozione dell'azoto
 N_strip_eff_val = np.arange(0.5,1,0.1) # min, med, max
 Land_spred_ha = 1
 Land_cost = 589 # Euro/ha, Dati RICA, (Affitti passivi / sau in affitto)
-Land_cost_to_right = 0.1 # fraction of the land cost to be paid in case of land rights
+Land_cost_to_right = 0.005 # fraction of the land cost to be paid in case of land rights
 Land_rights = Land_cost * Land_cost_to_right
 p_sanction = 0.3 # Probabilità di sanzione
 p_sanction_val = np.arange(0.01,1,0.05)
-Land_cost_to_rights_val = np.arange(0.1,1,0.1) #
+Land_cost_to_rights_val = np.arange(0.001,0.1,0.001) #
 Land_cost_0	= 0 #Land cost for non-compliace
 Sanction = 2582.28  # 516.46 ad euro 5164.57 , Disciplina tecnica per la utilizzazione dei liquami zootecnici - Le sanzioni amministrative sono così graduate: a) in sede di prima violazione, la sanzione da applicare è pari alla sanzione minima prevista;b) in sede di seconda violazione, la sanzione da applicare è pari al 50% della sanzione massima prevista;c) in sede di terza violazione, la sanzione da applicare è pari al 75% della sanzione massima prevista;d) in sede di quarta e successiva violazione, la sanzione da applicare è pari alla sanzione massima prevista
 Sanction_val = [516.46, 2582.28, 3873.43 , 5164.57] # min, 50%, 75%, max
@@ -76,9 +77,9 @@ def plot_results(results, par1 , par2, b = False):
     plt.xlabel(par1)
     plt.ylabel(par2)
     if b:
-        plt.title('With Biogas')
+        plt.title('With Nitrate stripping technology')
     else:
-        plt.title('Without Biogas')
+        plt.title('Without Nitrate stripping')
     if b:
         plt.savefig(('./Grafici/'+par1+'_'+par2+'_biogas.png'))
     else: 
@@ -88,16 +89,16 @@ def plot_results(results, par1 , par2, b = False):
 def heatmap2d(arr: np.ndarray, xlabel, ylabel, x_param, y_param, b = False):
 
     plt.figure(figsize=(8,6))
-    norm = colors.TwoSlopeNorm(vmin= -3, vcenter=0 , vmax=+3)
+    norm = colors.TwoSlopeNorm(vmin= -1, vcenter=0 , vmax=+1)
     img = plt.imshow(arr,aspect='auto', origin='lower', 
                  extent=[ y_param[0], y_param[-1],x_param[0], x_param[-1]], 
                   interpolation= 'Bilinear', cmap='RdYlGn', norm=norm)
     # Add colorbar
     plt.colorbar(img, label='Delta utility')
     if b:
-        plt.title('With Biogas')
+        plt.title('With Nitrate stripping')
     else:
-        plt.title('Without Biogas')
+        plt.title('Without Nitrate stripping')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     if b:
@@ -108,16 +109,16 @@ def heatmap2d(arr: np.ndarray, xlabel, ylabel, x_param, y_param, b = False):
 def heatmap2d2(arr: np.ndarray, xlabel, ylabel, x_param, y_param, b = False):
 
     plt.figure(figsize=(8,6))
-    norm = colors.TwoSlopeNorm(vmin= -3, vcenter=0 , vmax=+3)
+    norm = colors.TwoSlopeNorm(vmin= -1, vcenter=0 , vmax=+1)
     img = plt.imshow(arr,aspect='auto', origin='lower', 
                  extent=[ y_param[0], y_param[-1],x_param[0], x_param[-1]], 
                   interpolation= 'Bilinear', cmap='RdYlGn')
     # Add colorbar
     plt.colorbar(img, label='Delta utility')
     if b:
-        plt.title('With Biogas')
+        plt.title('With Nitrate stripping')
     else:
-        plt.title('Without Biogas')
+        plt.title('Without Nitrate stripping')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     if b:
@@ -132,7 +133,7 @@ def deltab_heat(arr: np.ndarray, xlabel, ylabel, x_param, y_param):
                   interpolation= 'Bilinear', cmap='Blues')
         # Add colorbar
     plt.colorbar(img, label='Difference of Delta Utilities')
-    plt.title('Difference of Delta Utilities between biogas and non-biogas')
+    plt.title('Difference of Delta Utilities between the two scenarios')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.savefig(('./Grafici/'+xlabel+'_'+ylabel+'_diff.png'))
@@ -174,7 +175,6 @@ def surface3d_plot(arr: np.ndarray, xlabel, ylabel, x_param, y_param, b=False):
     # Show the plot
     plt.show()
 
-
 # %% Disposal costs and risk aversion
 # Sensitivity analysis
 results = np.zeros((len(Land_cost_to_rights_val),len(Risk_aversion_val)))
@@ -191,6 +191,7 @@ heatmap2d(resultsb, 'Risk aversion', 'Manure disposal cost', lr, Risk_aversion_v
 
 surface3d_plot(results, 'Risk aversion', 'Manure disposal cost', lr, Risk_aversion_val)
 
+
 # %% Sanction and probability of sanction
 results2 = np.zeros((len(Sanction_val),len(p_sanction_val)))
 resultsb  = np.zeros((len(Sanction_val),len(p_sanction_val)))
@@ -205,6 +206,8 @@ heatmap2d(results2,  'Probability of sanction', 'Sanction',Sanction_val,p_sancti
 heatmap2d(resultsb,  'Probability of sanction', 'Sanction',Sanction_val,p_sanction_val,1 )
 deltab_heat(deltab, 'Probability of sanction', 'Sanction',Sanction_val,p_sanction_val)
 surface3d_plot(results2, 'Probability of sanction', 'Sanction',Sanction_val,p_sanction_val)
+
+
 # %% Risk aversion and probability of sanction
 results = np.zeros((len(p_sanction_val),len(Risk_aversion_val)))
 resultsb  = np.zeros((len(p_sanction_val),len(Risk_aversion_val)))
@@ -261,4 +264,17 @@ for i in range(len(Land_cost_to_rights_val)):
 heatmap2d2(results, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val)
 heatmap2d2(resultsb, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val,1)
 deltab_heat(resultsb-results, 'Nitrogen removal efficiency', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), N_strip_eff_val)
+# %% MAnure disposal cost and risk aversion
+results = np.zeros((len(Land_cost_to_rights_val),len(Risk_aversion_val)))
+resultsb  = np.zeros((len(Land_cost_to_rights_val),len(Risk_aversion_val)))
+for i in range(len(Land_cost_to_rights_val)):
+    for j in range(len(Risk_aversion_val)):
+        L_r = Land_cost * Land_cost_to_rights_val[i]
+        results[i,j]= delta_compliance(L_r, Risk_aversion_val[j], p_sanction, Land_cost_0, Sanction)
+        resultsb[i,j]= delta_compliance_b(L_r, Risk_aversion_val[j], p_sanction, Land_cost_0, Sanction, N_strip_eff)
+# Plot the heatmap
+heatmap2d(results, 'Risk aversion', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), Risk_aversion_val)
+heatmap2d(resultsb, 'Risk aversion', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), Risk_aversion_val,1)
+deltab_heat(resultsb-results, 'Risk aversion', 'Manure disposal cost', (Land_cost * Land_cost_to_rights_val), Risk_aversion_val)
+
 # %%
