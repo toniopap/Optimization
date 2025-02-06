@@ -23,7 +23,7 @@ Sanction = 2582.28  # 516.46 ad euro 5164.57 , Disciplina tecnica per la utilizz
 Sanction_val = [516.46, 2582.28, 3873.43 , 5164.57] # min, 50%, 75%, max
 
 Risk_aversion = 0.193 # Italian farmer risk aversion by elicitation using lotteries, source: https://doi.org/10.1002/aepp.13330 , 0.164 , 0.223
-Risk_aversion_val = np.arange(0.164, 0.223, 0.01) # min, max
+Risk_aversion_val = np.arange(0.164, 0.223, 0.001) # min, max
 R_europe = 0.214 # Risk aversion for Europe
 R_europe_val = np.arange(0.206, 0.223, 0.01) # min, max
 
@@ -188,6 +188,30 @@ lr = Land_cost_to_rights_val*Land_cost
 heatmap2d(results, 'Risk aversion', 'Manure disposal cost', lr, Risk_aversion_val)
 heatmap2d(resultsb, 'Risk aversion', 'Manure disposal cost', lr, Risk_aversion_val,1)
 deltab_heat(deltab, 'Risk aversion', 'Manure disposal cost',Sanction_val,p_sanction_val)
+#%%
+a = np.array(([1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10],[5,2,0.1,0.001,0.0001,0,0,9,10,9]))
+b = np.where(np.abs(a) < 1e-2)
+
+zero_level = np.where(np.abs(results) < 1e-2)  # Indices where Delta Utility ≈ 0
+
+
+#%%   
+if zero_level[0].size > 0 and zero_level[1].size > 0:
+    # Convert indices to corresponding parameter values
+    x_vals = np.array([x_param[i] for i in zero_level[0]])  # Extract corresponding x values
+    y_vals = np.array([y_param[j] for j in zero_level[1]])  # Extract corresponding y values
+
+    # Sort points by x for interpolation
+    sorted_indices = np.argsort(x_vals)
+    x_vals_sorted = x_vals[sorted_indices]
+    y_vals_sorted = y_vals[sorted_indices]
+
+    # Interpolate to create a smooth line
+    if len(x_vals_sorted) > 1:
+        interp_func = interp1d(x_vals_sorted, y_vals_sorted, kind='linear', fill_value="extrapolate")
+        x_interp = np.linspace(min(x_vals_sorted), max(x_vals_sorted), 100)
+        y_interp = interp_func(x_interp)
+        plt.plot(y_interp, x_interp, 'b--', label='Zero Δ Utility')
 
 # %% Sanction and probability of sanction
 results2 = np.zeros((len(Sanction_val),len(p_sanction_val)))
