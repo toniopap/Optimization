@@ -13,14 +13,15 @@ N_strip_eff = 0.7 # Efficienza di rimozione dell'azoto
 N_strip_eff_val = np.arange(0.5,1,0.1) # min, med, max
 Land_spred_ha = 1
 Land_cost = 589 # Euro/ha, Dati RICA, (Affitti passivi / sau in affitto)
-Land_cost_to_right = 0.005 # fraction of the land cost to be paid in case of land rights
+Land_cost_to_right = 0.1 # fraction of the land cost to be paid in case of land rights
 Land_rights = Land_cost * Land_cost_to_right
 p_sanction = 0.3 # Probabilità di sanzione
-p_sanction_val = np.arange(0.01,1,0.05)
+p_sanction_val = np.arange(0.01,1,0.001)
 Land_cost_to_rights_val = np.arange(0.001,0.2,0.001) #
 Land_cost_0	= 0 #Land cost for non-compliace
 Sanction = 2582.28  # 516.46 ad euro 5164.57 , Disciplina tecnica per la utilizzazione dei liquami zootecnici - Le sanzioni amministrative sono così graduate: a) in sede di prima violazione, la sanzione da applicare è pari alla sanzione minima prevista;b) in sede di seconda violazione, la sanzione da applicare è pari al 50% della sanzione massima prevista;c) in sede di terza violazione, la sanzione da applicare è pari al 75% della sanzione massima prevista;d) in sede di quarta e successiva violazione, la sanzione da applicare è pari alla sanzione massima prevista
 Sanction_val = [516.46, 2582.28, 3873.43 , 5164.57] # min, 50%, 75%, max
+Sanction_val2 = np.arange(516.46, 5164.57, 0.001) # min, 50%, 75%, max
 
 Risk_aversion = 0.193 # Italian farmer risk aversion by elicitation using lotteries, source: https://doi.org/10.1002/aepp.13330 , 0.164 , 0.223
 Risk_aversion_val = np.arange(0.164, 0.223, 0.001) # min, max
@@ -87,15 +88,37 @@ def plot_results(results, par1 , par2, b = False):
         plt.savefig(('./Grafici/'+par1+'_'+par2+'.png'))
     plt.show()
 
-def heatmap2d(arr: np.ndarray, xlabel, ylabel, x_param, y_param, b = False):
+def heatmap2d(arr: np.ndarray, xlabel, ylabel, x_param, y_param, b = False, line = False):
 
     plt.figure(figsize=(8,6))
-    norm = colors.TwoSlopeNorm(vmin= -0.8, vcenter=0 , vmax=+1.5)
+    norm = colors.TwoSlopeNorm(vmin= -2, vcenter=0 , vmax=+4)
     img = plt.imshow(arr,aspect='auto', origin='lower', 
                  extent=[ y_param[0], y_param[-1],x_param[0], x_param[-1]], 
                   interpolation= 'Bilinear', cmap='RdYlGn', norm=norm)
     # Add colorbar
     plt.colorbar(img, label='Delta utility')
+    if line:
+        zero_level = np.where(np.abs(arr) < 0.001)  # Indices where Delta Utility ≈ 0
+
+        if zero_level[0].size > 0 and zero_level[1].size > 0:
+            # Convert indices to corresponding parameter values
+            x_vals = np.array([x_param[i] for i in zero_level[0]])  # Extract corresponding x values
+            y_vals = np.array([y_param[j] for j in zero_level[1]])  # Extract corresponding y values
+
+            # Sort points by x for interpolation
+            sorted_indices = np.argsort(x_vals)
+            x_vals_sorted = x_vals[sorted_indices]
+            y_vals_sorted = y_vals[sorted_indices]
+            
+
+            # Interpolate to create a smooth line
+            if len(x_vals_sorted) > 1:
+                interp_func = interp1d(x_vals_sorted, y_vals_sorted, kind='linear', fill_value="extrapolate")
+                x_interp = np.linspace(min(x_vals_sorted), max(x_vals_sorted), 100000)
+                y_interp = interp_func(x_interp)
+                plt.legend()
+                plt.plot(y_interp, x_interp, label='Zero Δ Utility')
+    
     if b:
         plt.title('With Nitrate stripping')
     else:
@@ -185,34 +208,9 @@ for i in range(len(Land_cost_to_rights_val)):
         deltab[i,j]= resultsb[i,j] - results[i,j]
 # Plot the heatmap
 lr = Land_cost_to_rights_val*Land_cost
-heatmap2d(results, 'Risk aversion', 'Manure disposal cost', lr, Risk_aversion_val)
+heatmap2d(results, 'Risk aversion', 'Manure disposal cost', lr, Risk_aversion_val,0,1)
 heatmap2d(resultsb, 'Risk aversion', 'Manure disposal cost', lr, Risk_aversion_val,1)
 deltab_heat(deltab, 'Risk aversion', 'Manure disposal cost',Sanction_val,p_sanction_val)
-#%%
-a = np.array(([1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10],[5,2,0.1,0.001,0.0001,0,0,9,10,9]))
-b = np.where(np.abs(a) < 1e-2)
-
-zero_level = np.where(np.abs(results) < 1e-2)  # Indices where Delta Utility ≈ 0
-
-
-#%%   
-if zero_level[0].size > 0 and zero_level[1].size > 0:
-    # Convert indices to corresponding parameter values
-    x_vals = np.array([x_param[i] for i in zero_level[0]])  # Extract corresponding x values
-    y_vals = np.array([y_param[j] for j in zero_level[1]])  # Extract corresponding y values
-
-    # Sort points by x for interpolation
-    sorted_indices = np.argsort(x_vals)
-    x_vals_sorted = x_vals[sorted_indices]
-    y_vals_sorted = y_vals[sorted_indices]
-
-    # Interpolate to create a smooth line
-    if len(x_vals_sorted) > 1:
-        interp_func = interp1d(x_vals_sorted, y_vals_sorted, kind='linear', fill_value="extrapolate")
-        x_interp = np.linspace(min(x_vals_sorted), max(x_vals_sorted), 100)
-        y_interp = interp_func(x_interp)
-        plt.plot(y_interp, x_interp, 'b--', label='Zero Δ Utility')
-
 # %% Sanction and probability of sanction
 results2 = np.zeros((len(Sanction_val),len(p_sanction_val)))
 resultsb  = np.zeros((len(Sanction_val),len(p_sanction_val)))
@@ -223,8 +221,8 @@ for i in range(len(Sanction_val)):
         resultsb[i,j] = delta_compliance_b(Land_rights, Risk_aversion, p_sanction_val[j], Land_cost_0, Sanction_val[i], N_strip_eff)
         deltab[i,j]= resultsb[i,j] - results2[i,j]
 # Plot the heatmap
-heatmap2d(results2,  'Probability of sanction', 'Sanction',Sanction_val,p_sanction_val )
-heatmap2d(resultsb,  'Probability of sanction', 'Sanction',Sanction_val,p_sanction_val,1 )
+heatmap2d(results2,  'Probability of sanction', 'Sanction',Sanction_val,p_sanction_val,0,1 )
+heatmap2d(resultsb,  'Probability of sanction', 'Sanction',Sanction_val,p_sanction_val,1,1 )
 deltab_heat(deltab, 'Probability of sanction', 'Sanction',Sanction_val,p_sanction_val)
 
 # %% Risk aversion and probability of sanction
